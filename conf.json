@@ -1,0 +1,9 @@
+{
+  "target_columns": {
+    "Color": "Цвет свечения диода",
+    "Voltage": "Прямое напряжение (В) при токе 20 мА"
+  },
+  "sheet_name": "LedsParsed",
+  "url": "https://www.smd.ru/katalog/poluprovodnikovye_diody_SMD/smd_LED_svetodiody/LED_0603_1204_1206/",
+  "file_path": "Library.xlsx"
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,26 +14,38 @@ import (
 )
 
 type Component struct {
-	targetColumns map[string]string
-	sheetName     string
-	url           string
+	TargetColumns map[string]string `json:"target_columns"`
+	SheetName     string            `json:"sheet_name"`
+	Url           string            `json:"url"`
+	FilePath      string            `json:"file_path"`
+}
+
+func NewComponent(filePath string) (*Component, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения файла: %w", err)
+	}
+
+	var component Component
+	err = json.Unmarshal(data, &component)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка парсинга JSON: %w", err)
+	}
+
+	return &component, nil
 }
 
 func main() {
 
-	filename := "Library.xlsx"
+	filename := "conf.json"
 
-	component := Component{
-		targetColumns: map[string]string{
-		"Color":   "Цвет свечения диода",
-		"Voltage": "Прямое напряжение (В) при токе 20 мА",
-		},
-		sheetName: "LedsParsed",
-		url: "https://www.smd.ru/katalog/poluprovodnikovye_diody_SMD/smd_LED_svetodiody/LED_0603_1204_1206/",
+	component, err := NewComponent(filename)
+	if err != nil {
+		log.Fatalf("Ошибка при парсинге conf.json %v", err)
 	}
 
 	// Получаем HTML страницу
-	resp, err := http.Get(component.url)
+	resp, err := http.Get(component.Url)
 	if err != nil {
 		log.Fatal("Ошибка при получении страницы:", err)
 	}
@@ -53,18 +66,18 @@ func main() {
 	fmt.Printf("Найдено таблиц с классом 'goodsByArticul': %d\n\n", tables.Length())
 
 	// Выводим все заголовки таблиц
-	printAllTableHeaders(tables, component.targetColumns)
+	printAllTableHeaders(tables, component.TargetColumns)
 
 	// Собираем данные из всех таблиц
-	allData := collectDataFromTables(tables, component.targetColumns)
+	allData := collectDataFromTables(tables, component.TargetColumns)
 
 	// Записываем данные в XLSX файл
-	err = writeToXLSX(allData, filename, component.sheetName)
+	err = writeToXLSX(allData, component.FilePath, component.SheetName)
 	if err != nil {
 		log.Fatal("Ошибка при записи в XLSX:", err)
 	}
 
-	fmt.Printf("✅ Данные успешно записаны в %s на страницу %s", filename, component.sheetName)
+	fmt.Printf("✅ Данные успешно записаны в %s на страницу %s", component.FilePath, component.SheetName)
 }
 
 // Функция для сбора данных из всех таблиц

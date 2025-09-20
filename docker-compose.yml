@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  parser:
+    build: .
+    volumes:
+      - ./conf.json:/app/conf.json
+      - ./Library.xlsx:/app/Library.xlsx
